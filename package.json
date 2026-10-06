@@ -1,0 +1,24 @@
+{
+  "name": "kanban-agent-board", "version": "0.1.0", "private": true,
+  "description": "Local coding agent board with isolated Git worktrees and human review",
+  "license": "UNLICENSED",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "dev": "next dev frontend --hostname 127.0.0.1 --port 3000",
+    "build": "next build frontend",
+    "typecheck": "next typegen frontend && tsc --noEmit -p frontend/tsconfig.json",
+    "types": "openapi-typescript openapi.json -o frontend/lib/api-types.ts",
+    "desktop": "electron electron/main.cjs",
+    "test:e2e": "playwright test",
+    "check": "npm run typecheck && npm run build"
+  },
+  "dependencies": {
+    "next": "^16.3.8", "react": "^19.1.0", "react-dom": "^19.1.0",
+    "@dnd-kit/core": "^6.3.1", "@dnd-kit/sortable": "^10.0.0", "@dnd-kit/utilities": "^3.2.2",
+    "lucide-react": "^0.468.0", "react-markdown": "^10.1.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.0", "@types/react": "^19.1.0", "@types/react-dom": "^19.1.0", "@types/node": "^24.0.0",
+    "electron": "^44.5.1", "@playwright/test": "^1.55.0", "openapi-typescript": "^7.9.0"
+  }
+}

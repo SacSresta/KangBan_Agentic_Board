@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: '0.12.21'
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  backend:
+    name: Backend (Python ${{ matrix.python }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.12', '3.14']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - name: Install locked Python dependencies
+        run: uv sync --locked --python "${{ matrix.python }}"
+      - name: Test backend and agent engine
+        run: uv run --frozen pytest -q
+      - name: Check OpenAPI contract
+        run: uv run --frozen python scripts/export_openapi.py --check
+
+  frontend-integration:
+    name: Frontend and browser/Electron integration
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
+        with:
+          version: ${{ env.UV_VERSION }}
+          python-version: '3.14'
+          enable-cache: true
+      - name: Install locked dependencies
+        run: |
+          uv sync --locked
+          npm ci
+      - name: Verify generated API types
+        run: |
+          uv run --frozen python scripts/export_openapi.py --check
+          npm run types
+          git diff --exit-code -- frontend/lib/api-types.ts
+      - name: Check types and static production export
+        run: npm run check
+      - name: Install browser and Linux desktop dependencies
+        run: npx playwright install --with-deps chromium
+      - name: Test browser and Electron
+        run: xvfb-run -a npm run test:e2e
+      - name: Retain failed integration evidence
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: integration-failure
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7

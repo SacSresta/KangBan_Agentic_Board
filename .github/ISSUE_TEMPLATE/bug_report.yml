@@ -1,0 +1,33 @@
+name: Bug report
+description: Report a reproducible application problem
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include credentials, private repository contents, or local databases. Use SECURITY.md for sensitive security reports."
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      description: Describe the problem and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Include a small example using a disposable repository when possible.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python/Node versions, browser or Electron, and deterministic or live-provider mode. Omit credentials and private endpoint URLs.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Relevant output
+      description: Redact sensitive information before sharing logs or screenshots.
